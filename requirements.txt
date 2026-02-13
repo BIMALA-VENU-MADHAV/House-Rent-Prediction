@@ -12,3 +12,4 @@ catboost==1.2.5
 
 joblib==1.4.2
 Cython==0.29.37
+seaborn==0.13.2
