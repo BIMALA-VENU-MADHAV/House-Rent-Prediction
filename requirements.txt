@@ -32,7 +32,6 @@ contourpy==1.1.1
 convertdate==2.4.0
 cryptography==44.0.0
 cycler==0.12.1
-cyhunspell==2.0.2
 Cython==0.29.14
 debugpy==1.6.3
 decorator==4.4.2
@@ -280,7 +279,7 @@ widgetsnbextension==4.0.3
 wrapt==1.14.1
 xgboost==2.1.3
 zipp==3.20.2
-Django
+Django>=5.0
 scikit-learn
 xgboost
 catboost
