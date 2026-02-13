@@ -1,0 +1,52 @@
+{% extends 'users/userbase.html' %}
+
+{% block content %}
+<div class="container mt-5">
+
+    <h2 class="text-center mb-4">Model Evaluation Metrics</h2>
+    <p class="text-center text-muted">
+        Comparison of Individual Models and Ensemble (Final Prediction Model)
+    </p>
+
+    <!-- Metrics Table -->
+    {% if metrics %}
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped text-center align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>Model</th>
+                    <th>MSE</th>
+                    <th>RMSE</th>
+                    <th>MAE</th>
+                    <th>R²</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for model, values in metrics.items %}
+                <tr {% if model == "Ensemble (Final)" %}class="table-success fw-bold"{% endif %}>
+                    <td>{{ model }}</td>
+                    <td>{{ values.MSE }}</td>
+                    <td>{{ values.RMSE }}</td>
+                    <td>{{ values.MAE }}</td>
+                    <td>{{ values.R2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-warning text-center">
+        No training results available.
+    </div>
+    {% endif %}
+
+    <!-- Accuracy Graph -->
+    {% if accuracy_graph %}
+    <div class="text-center my-4">
+        <h4>Model Accuracy Graph (R² Score)</h4>
+        <img src="{{ accuracy_graph }}" alt="Accuracy Graph" class="img-fluid rounded shadow">
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

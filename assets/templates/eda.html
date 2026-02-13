@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>EDA Analysis</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        img {
+            max-width: 95%;
+            border: 1px solid #ccc;
+            padding: 5px;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>📊 Exploratory Data Analysis</h1>
+<hr>
+
+<h2>Rent Price Distribution</h2>
+<img src="{{ price_dist }}">
+
+<h2>Area vs Rent Price</h2>
+<img src="{{ area_price }}">
+
+<h2>Bedroom vs Rent Price</h2>
+<img src="{{ bedroom_price }}">
+
+<h2>Correlation Heatmap</h2>
+<img src="{{ heatmap }}">
+
+<hr>
+
+<a href="{% url 'prediction' %}">
+    <button>➡ Go to Prediction</button>
+</a>
+
+</body>
+</html>

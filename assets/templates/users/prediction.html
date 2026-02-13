@@ -1,0 +1,110 @@
+{% extends "users/userbase.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+
+    <h2 class="mb-4 text-center">🏠 House Rent Prediction</h2>
+
+    <form method="POST" action="{% url 'prediction' %}">
+        {% csrf_token %}
+
+        <div class="row mb-3">
+            <div class="col">
+                <label>BHK / Bedroom</label>
+                <input type="number" name="bhk" class="form-control" required>
+            </div>
+            <div class="col">
+                <label>Area (sqft)</label>
+                <input type="number" name="size" class="form-control" required>
+            </div>
+            <div class="col">
+                <label>Bathroom</label>
+                <input type="number" name="bathroom" class="form-control" required>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col">
+                <label>City</label>
+                <input type="text" name="city" class="form-control" required>
+            </div>
+            <div class="col">
+                <label>Locality</label>
+                <input type="text" name="locality" class="form-control" required>
+            </div>
+            <div class="col">
+                <label>Furnishing Status</label>
+                <select name="furnishing_status" class="form-control" required>
+                    <option value="Unfurnished">Unfurnished</option>
+                    <option value="Semi-Furnished">Semi-Furnished</option>
+                    <option value="Furnished">Furnished</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col">
+                <label>Tenant Preferred</label>
+                <select name="tenant_preferred" class="form-control" required>
+                    <option value="Bachelors">Bachelors</option>
+                    <option value="Family">Family</option>
+                    <option value="Bachelors/Family">Bachelors/Family</option>
+                </select>
+            </div>
+            <div class="col">
+                <label>Seller Type</label>
+                <select name="point_of_contact" class="form-control" required>
+                    <option value="Contact Owner">Contact Owner</option>
+                    <option value="Contact Agent">Contact Agent</option>
+                </select>
+            </div>
+            <div class="col">
+                <label>Property Type</label>
+                <select name="property_type" class="form-control" required>
+                    <option value="Carpet Area">Carpet Area</option>
+                    <option value="Super Area">Super Area</option>
+                    <option value="Built Area">Built Area</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label>Floor</label>
+            <input type="text" name="floor" class="form-control" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg w-100">
+            Predict Rent
+        </button>
+    </form>
+
+    {% if prediction %}
+    <div class="alert alert-success mt-4 text-center">
+        <h4>💰 Predicted Monthly Rent</h4>
+        <h2>₹ {{ prediction }}</h2>
+    </div>
+
+    <hr>
+
+    <h4 class="text-center mt-4">📊 Model Performance</h4>
+
+    <div class="row mt-4">
+        {% if rmse_plot %}
+        <div class="col-md-6 text-center">
+            <img src="data:image/png;base64,{{ rmse_plot }}"
+                 class="img-fluid rounded shadow">
+        </div>
+        {% endif %}
+
+        {% if r2_plot %}
+        <div class="col-md-6 text-center">
+            <img src="data:image/png;base64,{{ r2_plot }}"
+                 class="img-fluid rounded shadow">
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

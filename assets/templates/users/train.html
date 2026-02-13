@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Train Rent Prediction Model</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f2f4f7;
+        }
+        .box {
+            width: 420px;
+            margin: 120px auto;
+            background: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 8px;
+            box-shadow: 0 0 12px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #333;
+        }
+        button {
+            padding: 12px 25px;
+            font-size: 16px;
+            background: green;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        button:hover {
+            background: darkgreen;
+        }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h2>🔧 Train House Rent Model</h2>
+    <form method="POST">
+        {% csrf_token %}
+        <button type="submit">Train Model</button>
+    </form>
+</div>
+
+</body>
+</html>
