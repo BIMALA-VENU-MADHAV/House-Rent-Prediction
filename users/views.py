@@ -164,9 +164,6 @@ def training(request):
     import joblib
     import numpy as np
     import pandas as pd
-    import matplotlib
-    matplotlib.use('Agg')
-
     import matplotlib.pyplot as plt
 
     from django.conf import settings
@@ -390,9 +387,6 @@ from xgboost import XGBRegressor
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-import io
-import base64
-
 # =====================================================
 # MODEL STORAGE
 # =====================================================
@@ -552,16 +546,6 @@ def train_model(request):
 
     return render(request, "eda.html", context)
 
-def fig_to_base64():
-    buffer = io.BytesIO()
-    plt.savefig(buffer, format="png", bbox_inches="tight")
-    buffer.seek(0)
-    image_png = buffer.getvalue()
-    buffer.close()
-    plt.close()
-    return base64.b64encode(image_png).decode("utf-8")
-
-
 
 # =====================================================
 # PREDICTION VIEW
@@ -569,13 +553,13 @@ def fig_to_base64():
 def prediction(request):
 
     prediction_value = None
-    rmse_plot = None
-    r2_plot = None
 
     if request.method == "POST":
 
+        print("\n📥 PREDICTION REQUEST RECEIVED")
+
         # -----------------------------
-        # LOAD MODELS & LOOKUPS
+        # LOAD MODELS & LOOKUP
         # -----------------------------
         rf = joblib.load(os.path.join(MODEL_DIR, "rf_model.pkl"))
         xgb = joblib.load(os.path.join(MODEL_DIR, "xgb_model.pkl"))
@@ -583,6 +567,8 @@ def prediction(request):
         columns = joblib.load(os.path.join(MODEL_DIR, "columns.pkl"))
         locality_median = joblib.load(os.path.join(MODEL_DIR, "locality_median.pkl"))
         rent_lookup = joblib.load(os.path.join(MODEL_DIR, "rent_lookup.pkl"))
+
+        
 
         # -----------------------------
         # INPUT DATA
@@ -600,100 +586,85 @@ def prediction(request):
             "Floor": request.POST["floor"]
         }])
 
+        print("📄 Input Data:")
+        print(input_df)
+
         # -----------------------------
-        # LOOKUP CHECK
+        # CHECK LOOKUP FOR EXACT MATCH
         # -----------------------------
-        key = tuple(input_df.iloc[0].values)
+        key = (
+            input_df.at[0, "bedroom"], input_df.at[0, "area"], input_df.at[0, "bathroom"],
+            input_df.at[0, "City"], input_df.at[0, "locality"],
+            input_df.at[0, "furnish_type"], input_df.at[0, "Tenant Preferred"],
+            input_df.at[0, "seller_type"], input_df.at[0, "property_type"],
+            input_df.at[0, "Floor"]
+        )
 
         if key in rent_lookup:
             prediction_value = rent_lookup[key]
-
+        
         else:
+            # -----------------------------
+            # LOCALITY FEATURE
+            # -----------------------------
             input_df["locality_median_rent"] = input_df["locality"].map(locality_median)
-            input_df["locality_median_rent"].fillna(
-                np.median(list(rent_lookup.values())),
-                inplace=True
+            mask_missing = input_df["locality_median_rent"].isna()
+            if mask_missing.any():
+                input_df.loc[mask_missing, "locality_median_rent"] = input_df.at[0,"area"] * 0 + np.median(list(rent_lookup.values()))
+
+            # -----------------------------
+            # PRICE PER SQFT BUCKET
+            # -----------------------------
+            input_df["pps"] = input_df["locality_median_rent"] / input_df["area"]
+            input_df["pps_bucket"] = pd.cut(
+                input_df["pps"],
+                bins=[0, 10, 20, 40, 80, 200],
+                labels=["Very Low", "Low", "Medium", "High", "Luxury"]
             )
 
-            input_df["bed_bath_ratio"] = (
-                input_df["bedroom"] / input_df["bathroom"].replace(0, 1)
+            # -----------------------------
+            # FEATURE ENGINEERING
+            # -----------------------------
+            input_df["bed_bath_ratio"] = input_df["bedroom"] / input_df["bathroom"].replace(0,1)
+            input_df["area_bucket"] = pd.cut(
+                input_df["area"],
+                bins=[0,500,800,1200,2000,5000],
+                labels=["Very Small","Small","Medium","Large","Very Large"]
             )
 
             input_df.drop(columns=["locality"], inplace=True)
             input_df = pd.get_dummies(input_df, drop_first=True)
             input_df = input_df.reindex(columns=columns, fill_value=0)
 
+            # -----------------------------
+            # SCALE
+            # -----------------------------
             input_scaled = scaler.transform(input_df)
 
+            # -----------------------------
+            # PREDICT (LOG)
+            # -----------------------------
             rf_log = rf.predict(input_scaled)
             xgb_log = xgb.predict(input_scaled)
-
             final_log = (0.65 * rf_log) + (0.35 * xgb_log)
             prediction_value = np.expm1(final_log[0])
 
-            ptype_multiplier = {
-                "Carpet Area": 1.25,
-                "Super Area": 1.0,
-                "Built Area": 1.1
-            }
+            # -----------------------------
+            # PROPERTY TYPE MULTIPLIER
+            # -----------------------------
+            ptype_multiplier = {"Carpet Area":1.25, "Super Area":1.0, "Built Area":1.1}
+            prediction_value *= ptype_multiplier.get(request.POST["property_type"], 1.0)
 
-            prediction_value *= ptype_multiplier.get(
-                request.POST["property_type"], 1.0
-            )
-
+            # -----------------------------
+            # LOW RENT CALIBRATION
+            # -----------------------------
             if prediction_value < 5000:
                 prediction_value = 5000
 
-        prediction_value = round(prediction_value, 2)
+        prediction_value = round(prediction_value,2)
 
-        # =====================================================
-        # 📊 XGBOOST PERFORMANCE (POLISHED BAR GRAPHS)
-        # =====================================================
-        # 👉 Replace with REAL metrics if you have them
-        rmse = 4120
-        r2 = 0.87
+        print("📈 FINAL RENT PREDICTION: ₹", prediction_value)
 
-        # -----------------------------
-        # RMSE HORIZONTAL BAR
-        # -----------------------------
-        plt.figure(figsize=(6, 2.5))
-        plt.barh(["RMSE"], [rmse])
-        plt.xlabel("Error (Lower is Better)")
-        plt.title("XGBoost RMSE")
+    return render(request,"users/prediction.html",{"prediction":prediction_value})
 
-        plt.text(
-            rmse * 0.98, 0,
-            f"{rmse:.0f}",
-            va="center", ha="right",
-            color="white", fontsize=10
-        )
 
-        rmse_plot = fig_to_base64()
-
-        # -----------------------------
-        # R² HORIZONTAL BAR
-        # -----------------------------
-        plt.figure(figsize=(6, 2.5))
-        plt.barh(["R²"], [r2])
-        plt.xlim(0, 1)
-        plt.xlabel("Score (Higher is Better)")
-        plt.title("XGBoost R² Score")
-
-        plt.text(
-            r2 * 0.98, 0,
-            f"{r2:.2f}",
-            va="center", ha="right",
-            color="white", fontsize=10
-        )
-
-        r2_plot = fig_to_base64()
-
-    return render(
-        request,
-        "users/prediction.html",
-        {
-            "prediction": prediction_value,
-            "rmse_plot": rmse_plot,
-            "r2_plot": r2_plot
-        }
-    )
