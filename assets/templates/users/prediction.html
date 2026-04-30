@@ -3,7 +3,6 @@
 
 {% block content %}
 <div class="container mt-5">
-
     <h2 class="mb-4 text-center">🏠 House Rent Prediction</h2>
 
     <form method="POST" action="{% url 'prediction' %}">
@@ -12,26 +11,26 @@
         <div class="row mb-3">
             <div class="col">
                 <label>BHK / Bedroom</label>
-                <input type="number" name="bhk" class="form-control" required>
+                <input type="number" name="bhk" class="form-control" placeholder="e.g., 2" required>
             </div>
             <div class="col">
                 <label>Area (sqft)</label>
-                <input type="number" name="size" class="form-control" required>
+                <input type="number" name="size" class="form-control" placeholder="e.g., 1200" required>
             </div>
             <div class="col">
                 <label>Bathroom</label>
-                <input type="number" name="bathroom" class="form-control" required>
+                <input type="number" name="bathroom" class="form-control" placeholder="e.g., 2" required>
             </div>
         </div>
 
         <div class="row mb-3">
             <div class="col">
                 <label>City</label>
-                <input type="text" name="city" class="form-control" required>
+                <input type="text" name="city" class="form-control" placeholder="e.g., Kolkata" required>
             </div>
             <div class="col">
                 <label>Locality</label>
-                <input type="text" name="locality" class="form-control" required>
+                <input type="text" name="locality" class="form-control" placeholder="e.g., Salt Lake City" required>
             </div>
             <div class="col">
                 <label>Furnishing Status</label>
@@ -71,40 +70,17 @@
 
         <div class="mb-3">
             <label>Floor</label>
-            <input type="text" name="floor" class="form-control" required>
+            <input type="text" name="floor" class="form-control" placeholder="e.g., 1 out of 3" required>
         </div>
 
-        <button type="submit" class="btn btn-primary btn-lg w-100">
-            Predict Rent
-        </button>
+        <button type="submit" class="btn btn-primary btn-lg w-100">Predict Rent</button>
     </form>
 
     {% if prediction %}
     <div class="alert alert-success mt-4 text-center">
-        <h4>💰 Predicted Monthly Rent</h4>
+        <h4>💰 Predicted Monthly Rent:</h4>
         <h2>₹ {{ prediction }}</h2>
     </div>
-
-    <hr>
-
-    <h4 class="text-center mt-4">📊 Model Performance</h4>
-
-    <div class="row mt-4">
-        {% if rmse_plot %}
-        <div class="col-md-6 text-center">
-            <img src="data:image/png;base64,{{ rmse_plot }}"
-                 class="img-fluid rounded shadow">
-        </div>
-        {% endif %}
-
-        {% if r2_plot %}
-        <div class="col-md-6 text-center">
-            <img src="data:image/png;base64,{{ r2_plot }}"
-                 class="img-fluid rounded shadow">
-        </div>
-        {% endif %}
-    </div>
     {% endif %}
-
 </div>
 {% endblock %}
